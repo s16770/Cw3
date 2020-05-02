@@ -22,6 +22,7 @@ namespace Cw3.Controllers
         [HttpGet]
         public IActionResult GetStudents(string orderBy)
         {
+            //throw new StudentCannotDefendException ??
             return Ok(_dbService.GetStudents());
         }
 

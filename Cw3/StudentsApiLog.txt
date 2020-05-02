@@ -1,0 +1,99 @@
+
+
+
+Log: 
+Path: 
+/api/studentsMethod: 
+GETQuery: 
+Body: 
+
+Log: 
+Path: 
+/api/studentsMethod: 
+GETQuery: 
+Body: 
+
+Log: 
+Path: 
+/api/studentsMethod: 
+GETQuery: 
+Body: 
+
+New log: 
+Path: /api/students
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /api/enrollments
+Method: POST
+Query: 
+Body: {
+"IndexNumber": "s1256",
+"FirstName": "Mariusz",
+"LastName": "Kaniewski",
+"BirthDate": "30.03.1999"
+"Studies": "IT"
+}
+
+New log: 
+Path: /api/enrollments
+Method: POST
+Query: 
+Body: {
+"IndexNumber": "s1256",
+"FirstName": "Mariusz",
+"LastName": "Kaniewski",
+"BirthDate": "30.03.1999"
+"Studies": "IT"
+}
+
+New log: 
+Path: /api/enrollments
+Method: POST
+Query: 
+Body: {
+"IndexNumber": "s1256",
+"FirstName": "Mariusz",
+"LastName": "Kaniewski",
+"BirthDate": "30.03.1999"
+"Studies": "IT"
+}
+
+New log: 
+Path: /api/students
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /api/enrollments
+Method: POST
+Query: 
+Body: {
+"IndexNumber": "s1256",
+"FirstName": "Mariusz",
+"LastName": "Kaniewski",
+"BirthDate": "30.03.1999",
+"Studies": "IT"
+}
+
+New log: 
+Path: /api/students
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /api/students
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /api/students
+Method: GET
+Query: 
+Body: 
+

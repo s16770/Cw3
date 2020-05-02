@@ -107,7 +107,7 @@ namespace Cw3.Services
                     catch(SqlException ex)
                     {
                         transaction.Rollback();
-                        response.message = "Student o takim ID jest juz w bazie.";
+                        response.message = "Student o takim ID jest juz w bazie. " + ex.Message;
                     } 
                 }
                 catch (SqlException exc)
@@ -175,6 +175,34 @@ namespace Cw3.Services
 
                 return response;
             }
+        }
+
+        public Student GetStudent(string index)
+        {
+            using (var con = new SqlConnection(ConString))
+            using (var com = new SqlCommand())
+            {
+                com.Connection = con;
+
+                com.CommandText = "SELECT IndexNumber, FirstName, LastName, BirthDate, IdEnrollment " +
+                  "FROM Student WHERE IndexNumber=@IndexNum";
+                com.Parameters.AddWithValue("IndexNum", index);
+                con.Open();
+
+                Student student = new Student();
+
+                var stdnt = com.ExecuteReader();
+                if (stdnt.Read())
+                {
+                    student.IndexNumber = index;
+                    student.FirstName = stdnt["FirstName"].ToString();
+                    student.LastName = stdnt["LastName"].ToString();
+                    student.Birthdate = (DateTime)stdnt["BirthDate"];
+                    student.Studies = stdnt["IdEnrollment"].ToString();
+                    return student;
+                }
+                return null;
+            } 
         }
     }
 }
