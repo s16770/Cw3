@@ -71,7 +71,7 @@ namespace Cw3.DAL
                     enr.IdEnrollment = Int32.Parse(dr["IdEnrollment"].ToString());
                     enr.Semester = Int32.Parse(dr["Semester"].ToString());
                     enr.IdStudy = Int32.Parse(dr["IdStudy"].ToString());
-                    enr.StartDate = dr["StartDate"].ToString();
+                    enr.StartDate = Convert.ToDateTime(dr["StartDate"]);
                     list.Add(enr);
                 }
             }
