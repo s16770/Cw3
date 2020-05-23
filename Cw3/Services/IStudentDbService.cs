@@ -11,9 +11,9 @@ namespace Cw3.Services
     public interface IStudentDbService
     {
         EnrollStudentResponse EnrollStudent(EnrollStudentRequest request);
-
         PromoteStudentResponse PromoteStudents(PromoteStudentRequest request);
-
         Student GetStudent(string index);
+        LoginResponse Login(string login, string haslo);
+        LoginResponse RefreshToken(string refreshToken);
     }
 }

@@ -97,3 +97,156 @@ Method: GET
 Query: 
 Body: 
 
+New log: 
+Path: /api/students
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /favicon.ico
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /api/students
+Method: POST
+Query: 
+Body: 
+
+New log: 
+Path: /api/students
+Method: POST
+Query: 
+Body: {
+	"login": "s0234",
+	"haslo": "qaz123"
+}
+
+New log: 
+Path: /api/students
+Method: POST
+Query: 
+Body: {
+	"login": "s0234",
+	"password": "qaz123"
+}
+
+New log: 
+Path: /api/students
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /favicon.ico
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /api/students
+Method: POST
+Query: 
+Body: {
+	"login": "s0234",
+	"haslo": "qaz123"
+}
+
+New log: 
+Path: /api/students
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /favicon.ico
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /api/students
+Method: POST
+Query: 
+Body: {
+	"login": "s0234",
+	"haslo": "qaz123"
+}
+
+New log: 
+Path: /api/students
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /favicon.ico
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /api/students
+Method: POST
+Query: 
+Body: {
+	"login": "s0234",
+	"haslo": "qaz123"
+}
+
+New log: 
+Path: /api/students
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /favicon.ico
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /api/students
+Method: POST
+Query: 
+Body: {
+	"login": "s0234",
+	"haslo": "qaz123"
+}
+
+New log: 
+Path: /api/students
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /favicon.ico
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /api/students
+Method: POST
+Query: 
+Body: {
+	"login": "s0234",
+	"haslo": "qaz123"
+}
+
+New log: 
+Path: /api/students
+Method: GET
+Query: 
+Body: 
+
+New log: 
+Path: /favicon.ico
+Method: GET
+Query: 
+Body: 
+

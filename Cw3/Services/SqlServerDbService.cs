@@ -1,17 +1,28 @@
 ﻿using Cw3.DTOs.Requests;
 using Cw3.DTOs.Responses;
 using Cw3.Models;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
+using SimpleCrypto;
 
 namespace Cw3.Services
 {
     public class SqlServerDbService : IStudentDbService
     {
         private const string ConString = "Data Source=db-mssql;Initial Catalog=s16770;Integrated Security=True";
+        public IConfiguration Configuration { get; set; }
+        public SqlServerDbService(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
         public EnrollStudentResponse EnrollStudent(EnrollStudentRequest request)
         {   
             EnrollStudentResponse response = new EnrollStudentResponse();
@@ -203,6 +214,138 @@ namespace Cw3.Services
                 }
                 return null;
             } 
+        }
+
+        public LoginResponse Login(string login, string haslo)
+        {
+            LoginResponse response = new LoginResponse();
+            Student student = new Student();
+
+            ICryptoService crypto = new PBKDF2();
+
+            using (SqlConnection con = new SqlConnection(ConString)) 
+            using (SqlCommand com = new SqlCommand())
+            {
+
+                com.Connection = con;
+
+                com.CommandText = "SELECT IndexNumber, Passwd, Salt FROM STUDENT WHERE IndexNumber=@index";
+                com.Parameters.AddWithValue("index", login);
+
+                string passwd, dbPasswd, dbSalt;
+
+                con.Open();
+                SqlDataReader loginRead = com.ExecuteReader();
+                if (loginRead.Read())
+                {
+                    student.IndexNumber = loginRead["IndexNumber"].ToString();
+                    passwd = loginRead["Passwd"].ToString();
+                    dbSalt = loginRead["Salt"].ToString();
+                    dbPasswd = crypto.Compute(haslo, dbSalt);
+                    if (!crypto.Compare(passwd, dbPasswd))
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+
+                con.Close();
+
+                var claims = new[] {
+
+                new Claim(ClaimTypes.NameIdentifier, "1"),
+                new Claim(ClaimTypes.Name, student.IndexNumber),
+                new Claim(ClaimTypes.Role, "student"),
+            };
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["SecretKey"]));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                var token = new JwtSecurityToken
+                (
+                    issuer: "Gakko",
+                    audience: "Students",
+                    claims: claims,
+                    expires: DateTime.Now.AddMinutes(10),
+                    signingCredentials: creds
+                );
+
+                response.accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+                response.refreshToken = Guid.NewGuid();
+
+                con.Open();
+
+                com.CommandText = "UPDATE Student SET refToken=@refToken WHERE IndexNumber=@login";
+                com.Parameters.AddWithValue("login", login);
+                com.Parameters.AddWithValue("refToken", response.refreshToken);
+                com.ExecuteNonQuery();
+
+                con.Close();
+            }
+
+            return response;
+        }
+
+        public LoginResponse RefreshToken(string refreshToken)
+        {
+            LoginResponse response = new LoginResponse();
+            Student student = new Student();
+
+            using (SqlConnection con = new SqlConnection(ConString))
+            using (SqlCommand com = new SqlCommand())
+            {
+                com.Connection = con;
+                com.CommandText = "SELECT IndexNumber FROM Student WHERE refToken=@refToken";
+                com.Parameters.AddWithValue("refToken", refreshToken);
+
+                con.Open();
+                var tokenRead = com.ExecuteReader();
+                if (!tokenRead.Read())
+                {
+                    return null;
+                }
+
+                student.IndexNumber = tokenRead["IndexNumber"].ToString();
+
+                con.Close();
+
+                var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "1"),
+                new Claim(ClaimTypes.Name, student.IndexNumber),
+                new Claim(ClaimTypes.Role, "student"),
+            };
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["SecretKey"]));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                var token = new JwtSecurityToken
+                (
+                    issuer: "Gakko",
+                    audience: "Students",
+                    claims: claims,
+                    expires: DateTime.Now.AddMinutes(10),
+                    signingCredentials: creds
+                );
+
+                response.accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+                response.refreshToken = Guid.NewGuid();
+
+                con.Open();
+
+                com.CommandText = "UPDATE Student SET refToken=@refreshedToken WHERE IndexNumber=@index";
+                com.Parameters.AddWithValue("index", student.IndexNumber);
+                com.Parameters.AddWithValue("refreshedToken", response.refreshToken);
+
+                com.ExecuteNonQuery();
+
+                con.Close();
+            }
+
+            return response;
         }
     }
 }
