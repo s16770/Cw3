@@ -8,7 +8,7 @@ namespace Cw3.DTOs.Responses
 {
     public class PromoteStudentResponse
     {
-        public Enrollment enrollment { get; set; }
+        public ModelsAuto.Enrollment enrollment { get; set; }
         public string message { get; set; }
     }
 }

@@ -9,7 +9,7 @@ namespace Cw3.DTOs.Responses
     public class EnrollStudentResponse
     {
         public string IndexNumber { get; set; }
-        public Enrollment enrollment { get; set; }
+        public ModelsAuto.Enrollment enrollment { get; set; }
         public string message { get; set; }
     }
 }

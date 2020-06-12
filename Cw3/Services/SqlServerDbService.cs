@@ -6,12 +6,14 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using SimpleCrypto;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace Cw3.Services
 {
@@ -23,7 +25,8 @@ namespace Cw3.Services
         {
             Configuration = configuration;
         }
-        public EnrollStudentResponse EnrollStudent(EnrollStudentRequest request)
+
+        /*public EnrollStudentResponse EnrollStudent(EnrollStudentRequest request)
         {   
             EnrollStudentResponse response = new EnrollStudentResponse();
 
@@ -128,9 +131,89 @@ namespace Cw3.Services
                 }
                 return response;
             }
+        }*/
+
+        public EnrollStudentResponse EnrollStudent(EnrollStudentRequest request)
+        {
+            EnrollStudentResponse response = new EnrollStudentResponse();
+            ModelsAuto.Enrollment e = new ModelsAuto.Enrollment();
+
+            response.IndexNumber = request.IndexNumber;
+
+            var db = new ModelsAuto.s16770Context();
+
+            var studies = db.Studies.Where(s => s.Name == request.Studies);
+            if (studies.Count() == 0)
+            {
+                response.message = "Podanych studiow nie ma w bazie";
+                return response;
+            }
+            int idstudies = studies.First().IdStudy;
+
+            var enrollment = db.Enrollment.Where(e => e.IdStudy == idstudies)
+                                          .Where(e => e.Semester == 1)
+                                          .OrderBy(e => e.StartDate);
+
+            DateTime enrollDate;
+            var newEnrollment = db.Enrollment.OrderBy(e => e.IdEnrollment).Last().IdEnrollment;
+            int newEnrollmentId = newEnrollment + 10; 
+
+            if (enrollment.Count() == 0)
+            {
+                response.message = "Brak rozpoczetej rekrutacji";
+                enrollDate = DateTime.Now;
+
+                var enr = new ModelsAuto.Enrollment
+                {
+                    IdEnrollment = newEnrollmentId,
+                    Semester = 1,
+                    IdStudy = idstudies,
+                    StartDate = enrollDate
+                };
+
+                db.Enrollment.Add(enr);
+                db.SaveChanges();
+            }
+            else
+            {
+                newEnrollmentId = enrollment.Single().IdEnrollment;
+                enrollDate = (DateTime)enrollment.Single().StartDate;
+            }
+
+            e.IdEnrollment = newEnrollmentId;
+            e.Semester = 1;
+            e.IdStudy = idstudies;
+            e.StartDate = enrollDate;
+
+            response.enrollment = e;
+
+            DateTime bDate = Convert.ToDateTime(request.Birthdate);
+            //string formattedDate = bDate.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+            var student = new ModelsAuto.Student
+            {
+                IndexNumber = request.IndexNumber,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                BirthDate = bDate,
+                IdEnrollment = newEnrollmentId
+            };
+
+            db.Student.Add(student);
+            try
+            {
+                db.SaveChanges();
+            }
+            catch(Exception ex)
+            {
+                response.message = "Student o takim ID jest juz w bazie. " + ex.Message;
+            }
+        
+            response.message = "DONE";
+            return response;
         }
 
-        public PromoteStudentResponse PromoteStudents(PromoteStudentRequest request)
+        /*public PromoteStudentResponse PromoteStudents(PromoteStudentRequest request)
         {
             PromoteStudentResponse response = new PromoteStudentResponse();
 
@@ -186,35 +269,77 @@ namespace Cw3.Services
 
                 return response;
             }
+        }*/
+
+        public PromoteStudentResponse PromoteStudents(PromoteStudentRequest request)
+        {
+            PromoteStudentResponse response = new PromoteStudentResponse();
+
+            var db = new ModelsAuto.s16770Context();
+
+            var studies = db.Studies.Where(s => s.Name == request.Studies);
+            if (studies.Count() == 0)
+            {
+                response.message = "Podanych studiow nie ma w bazie";
+                return response;
+            }
+            int idstudies = studies.First().IdStudy;
+
+            ModelsAuto.Enrollment enrollment = new ModelsAuto.Enrollment();
+
+            object[] parameters =
+            {
+                new SqlParameter("@Studies", request.Studies),
+                new SqlParameter("@Semester", request.Semester)
+            };
+
+            var promotion = db.Database.ExecuteSqlRaw("PromoteStudents @Studies, @Semester", parameters);
+            var enr = db.Enrollment.Where(e => e.IdStudy == idstudies)
+                                   .Where(e => e.Semester == request.Semester+1);
+
+            int idEnr = enr.Single().IdEnrollment;
+            int idStu = enr.Single().IdStudy;
+            int sem = enr.Single().Semester;
+            DateTime sDate = enr.Single().StartDate;
+
+            enrollment.IdEnrollment = idEnr;
+            enrollment.IdStudy = idStu;
+            enrollment.Semester = sem;
+            enrollment.StartDate = sDate;
+
+            response.enrollment = enrollment;
+
+            return response;
         }
 
         public Student GetStudent(string index)
-        {
-            using (var con = new SqlConnection(ConString))
-            using (var com = new SqlCommand())
             {
-                com.Connection = con;
-
-                com.CommandText = "SELECT IndexNumber, FirstName, LastName, BirthDate, IdEnrollment " +
-                  "FROM Student WHERE IndexNumber=@IndexNum";
-                com.Parameters.AddWithValue("IndexNum", index);
-                con.Open();
-
-                Student student = new Student();
-
-                var stdnt = com.ExecuteReader();
-                if (stdnt.Read())
+                using (var con = new SqlConnection(ConString))
+                using (var com = new SqlCommand())
                 {
-                    student.IndexNumber = index;
-                    student.FirstName = stdnt["FirstName"].ToString();
-                    student.LastName = stdnt["LastName"].ToString();
-                    student.Birthdate = (DateTime)stdnt["BirthDate"];
-                    student.Studies = stdnt["IdEnrollment"].ToString();
-                    return student;
+                    com.Connection = con;
+
+                    com.CommandText = "SELECT IndexNumber, FirstName, LastName, BirthDate, IdEnrollment " +
+                      "FROM Student WHERE IndexNumber=@IndexNum";
+                    com.Parameters.AddWithValue("IndexNum", index);
+                    con.Open();
+
+                    Student student = new Student();
+
+                    var stdnt = com.ExecuteReader();
+                    if (stdnt.Read())
+                    {
+                        student.IndexNumber = index;
+                        student.FirstName = stdnt["FirstName"].ToString();
+                        student.LastName = stdnt["LastName"].ToString();
+                        student.Birthdate = (DateTime)stdnt["BirthDate"];
+                        student.Studies = stdnt["IdEnrollment"].ToString();
+                        return student;
+                    }
+                    return null;
                 }
-                return null;
-            } 
         }
+        
 
         public LoginResponse Login(string login, string haslo)
         {
